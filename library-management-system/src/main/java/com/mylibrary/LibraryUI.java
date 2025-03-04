@@ -102,9 +102,7 @@ public class LibraryUI extends Application {
     private ObservableList<Book> loadAllBooks() {
         ObservableList<Book> bookList = FXCollections.observableArrayList();
         
-// TODO 11: Load all books from the Books table and display them in the TableView. To achieve this, define a String variable to hold the SQL query that selects all records from the Books table. Name the variable query.
-
-        String query = " ";
+		String query = "SELECT * FROM Books";
 
         try (Connection conn = connect();
              Statement stmt = conn.createStatement();
@@ -143,8 +141,8 @@ private void searchBooks() {
 
     for (Book book : loadAllBooks()) {
         if (book.getTitle().toLowerCase().contains(searchText)) {
-    // TODO 13: After checking if the book's title contains the search text, if so, add the book to the list of filtered books. 
-         }
+			filteredBooks.add(book);
+		}
     }
 
     tableView.setItems(filteredBooks);
@@ -178,7 +176,7 @@ private void searchBooks() {
             pstmt.setString(2, author);
             pstmt.setBoolean(3, available);
 
-            // TODO 12: Complete the insertBook method by adding a line of code to execute the prepared statement, which will insert the new book record into the Books table. Use the executeUpdate() method to perform this operation. This method sends the SQL command to the database and performs the operation specified. For instance, it can insert a new row, update existing rows, or delete rows from a table.
+            pstmt.executeUpdate();
 
             showAlert(Alert.AlertType.INFORMATION, "Success", "Book inserted successfully.");
             clearInputFields();
@@ -192,11 +190,8 @@ private void searchBooks() {
     // Method to update a selected book
     private void updateBook() {
 
-        // TODO 14: Retrieve the selected book using tableView.getSelectionModel().getSelectedItem() and assign it to Book selectedBook.
-
-        // Remember to remove the /* */ comment section after completing your code for proper compilation.  
-
-/*
+        Book selectedBook = tableView.getSelectionModel().getSelectedItem();
+        
         if (selectedBook == null) {
             showAlert(Alert.AlertType.ERROR, "Selection Error", "No book selected for update.");
             return;
@@ -229,7 +224,6 @@ private void searchBooks() {
             e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Database Error", "Failed to update the book.");
         }
-             */
     }
 
     // Method to delete a selected book
@@ -240,17 +234,31 @@ private void searchBooks() {
             showAlert(Alert.AlertType.ERROR, "Selection Error", "No book selected for deletion.");
             return;
         }
-    // TODO 15: Inside "------" define a SQL query to delete a book from the Books table.  
 
-        String query = "--------";
+        String deleteLoansQuery = "DELETE FROM Loans WHERE book_id = ?";
+    	String deleteBookQuery = "DELETE FROM books WHERE book_id = ?";
 
         try (Connection conn = connect();
-             PreparedStatement pstmt = conn.prepareStatement(query)) {
+			PreparedStatement deleteLoansStmt = conn.prepareStatement(deleteLoansQuery);
+			PreparedStatement deleteBookStmt = conn.prepareStatement(deleteBookQuery)) 
+		{
+			conn.setAutoCommit(false);
 
-            pstmt.setInt(1, selectedBook.getBookId());
-            pstmt.executeUpdate();
-            showAlert(Alert.AlertType.INFORMATION, "Success", "Book deleted successfully.");
-            refreshTable();
+			deleteLoansStmt.setInt(1, selectedBook.getBookId());
+			deleteLoansStmt.executeUpdate();
+
+			deleteBookStmt.setInt(1, selectedBook.getBookId());
+			int rowsAffected = deleteBookStmt.executeUpdate();
+
+			if (rowsAffected > 0) {
+				conn.commit();
+				showAlert(Alert.AlertType.INFORMATION, "Success", "Book deleted successfully.");
+            	refreshTable();
+			} else {
+				conn.rollback();
+				showAlert(Alert.AlertType.ERROR, "Database Error", "Failed to delete the book.");
+			}
+            
         } catch (SQLException e) {
             e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Database Error", "Failed to delete the book.");
@@ -285,10 +293,9 @@ private void searchBooks() {
 
     // Method to connect to the database
     private Connection connect() throws SQLException {
-        // TODO 10: Complete the database connection with the correct user name and password.
         String url = "jdbc:mysql://localhost:3306/LibraryDB";
-        String user = "______";
-        String password = "________";
+        String user = "root";
+        String password = "mo0nshin3";
         return DriverManager.getConnection(url, user, password);
     }
 }
