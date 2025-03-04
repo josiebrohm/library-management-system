@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Comparator;
 
 import javafx.application.Application;
 import javafx.collections.FXCollections;
@@ -236,7 +237,7 @@ private void searchBooks() {
         }
 
         String deleteLoansQuery = "DELETE FROM Loans WHERE book_id = ?";
-    	String deleteBookQuery = "DELETE FROM books WHERE book_id = ?";
+    	String deleteBookQuery = "DELETE FROM Books WHERE book_id = ?";
 
         try (Connection conn = connect();
 			PreparedStatement deleteLoansStmt = conn.prepareStatement(deleteLoansQuery);
@@ -267,13 +268,8 @@ private void searchBooks() {
 
     // Method to sort books by title
     private void sortBooks() {
-// TODO 16: Retrieve the list of books from the TableView with tableView.getItems() and assign it to ObservableList<Book> books. Then, the method uses FXCollections.sort() with a case-insensitive Comparator to sort the list by title.
-
-        // Remember to remove the /* */ comment section after completing your code for proper compilation.  
-
-        /* 
+		ObservableList<Book> books = tableView.getItems();
         FXCollections.sort(books, Comparator.comparing(Book::getTitle, String.CASE_INSENSITIVE_ORDER));
-        */
     }
 
     // Method to display alert messages
@@ -295,7 +291,7 @@ private void searchBooks() {
     private Connection connect() throws SQLException {
         String url = "jdbc:mysql://localhost:3306/LibraryDB";
         String user = "root";
-        String password = "mo0nshin3";
+        String password = "password";
         return DriverManager.getConnection(url, user, password);
     }
 }
